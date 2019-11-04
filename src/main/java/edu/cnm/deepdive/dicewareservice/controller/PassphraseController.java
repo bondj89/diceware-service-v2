@@ -5,8 +5,10 @@ import edu.cnm.deepdive.dicewareservice.model.entity.Passphrase;
 import edu.cnm.deepdive.dicewareservice.model.entity.User;
 import edu.cnm.deepdive.dicewareservice.model.entity.Word;
 import edu.cnm.deepdive.dicewareservice.service.PassphraseGenerator;
+import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
+import net.bytebuddy.implementation.bytecode.constant.DefaultValue;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.ExposesResourceFor;
 import org.springframework.http.HttpStatus;
@@ -81,10 +83,21 @@ public class PassphraseController {
   @PutMapping(value = "{id:^\\d+$}",
       consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
   public Passphrase put(@PathVariable long id, @RequestBody Passphrase passphrase,
-      Authentication auth) {
+      @RequestParam(defaultValue = "false") boolean regenerate,
+      @RequestParam(defaultValue = "6") int length, Authentication auth) {
     Passphrase existing = get(id, auth);
     if (passphrase.getKey() != null) {
       existing.setKey(passphrase.getKey());
+    }
+    if (regenerate) {
+      List<Word> words = passphrase.getWords();
+      words.clear();
+      String[] dicewareWords = generator.passphrase(length);
+      for (String dw : dicewareWords) {
+        Word word = new Word();
+        word.setWord(dw);
+        words.add(word);
+      }
     }
     if (!passphrase.getWords().isEmpty()) {
       existing.getWords().forEach((word) -> word.setPassphrase(null));
