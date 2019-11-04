@@ -54,11 +54,10 @@ public class GoogleTokenService implements ResourceServerTokenServices {
       GoogleIdToken idToken = verifier.verify(token);
       if (idToken != null) {
         Payload payload = idToken.getPayload();
-        User user = userService. getOrCreateUser(payload.getSubject());  // TODO Get any additional info from payload.
+        User user = userService.getOrCreateUser(payload.getSubject()); // TODO Get any additional info from payload.
         Collection<GrantedAuthority> grants =
             Collections.singleton(new SimpleGrantedAuthority("ROLE_USER"));
-        Authentication base =
-            new UsernamePasswordAuthenticationToken(user, token, grants);
+        Authentication base = new UsernamePasswordAuthenticationToken(user, token, grants);
         OAuth2Request request = converter.extractAuthentication(payload).getOAuth2Request();
         return new OAuth2Authentication(request, base);
       } else {
